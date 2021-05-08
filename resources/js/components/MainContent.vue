@@ -3,10 +3,13 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header">Heading</div>
-
-                    <div class="card-body">
-                        Signed in
+                    <div class="card-header">
+                        Heading
+                    </div>
+                    <div class="main-container">
+                        <div class="card-body">
+                            <message-input></message-input>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -17,7 +20,16 @@
 <script>
 export default {
     mounted() {
-        console.log('Component mounted.')
-    }
+
+    },
 }
 </script>
+
+<style lang="scss" scoped>
+.btn-submit {
+    min-width: 125px;
+}
+.main-container {
+    height: 85vh;
+}
+</style>
