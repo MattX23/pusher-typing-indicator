@@ -23,6 +23,8 @@
 </template>
 
 <script>
+import { EventBus } from "../eventbus/event-bus";
+
 export default {
     props: {
         user: {
@@ -38,38 +40,60 @@ export default {
             },
             isTyping: false,
             respondent: null,
-            messages: [],
         };
     },
     methods: {
         submitMessage() {
             // todo some validation
 
-            axios
+            const messageBody = this.message.input;
+            const tempMessageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            this.message.input = '';
+
+            this.passMessageToParent(messageBody, tempMessageId);
+            this.passMessageToStorage(messageBody)
+                .then(response => {
+                    EventBus.$emit('message-status-update', {
+                        status: 'sent',
+                        tempMessageId: tempMessageId,
+                        message: response.data.message
+                    })
+                })
+                .catch(() => {
+                    EventBus.$emit('message-status-update', {
+                        status: 'failed',
+                        tempMessageId: tempMessageId,
+                        message: messageBody
+                    })
+                });
+        },
+        passMessageToParent(messageBody, tempMessageId) {
+            const message = {
+                body: messageBody,
+                username: 'you',
+                userId: this.user.id,
+                timeAgo: 'just now',
+                status: 'sending',
+                id: tempMessageId,
+            };
+
+            EventBus.$emit('message-update', message);
+        },
+        passMessageToStorage(messageBody) {
+            return axios
                 .post(`/api/message/send`, {
-                    body: this.message.input,
+                    body: messageBody,
                     user_id: this.user.id,
                 })
                 .then(response => {
-                    console.log(response.data);
-                })
-                .catch(errors => {
-                    console.log(errors);
-                    alert("whoops");
-                })
+                    return response.data;
+                });
         },
     }
 }
 </script>
 
 <style lang="scss" scoped>
-.message-input {
-    position: absolute;
-    bottom: 1rem;
-    width: 96%;
-    margin: 15px;
-    left: 0;
-}
 .info-block {
     font-style: italic;
     color: darkgrey;

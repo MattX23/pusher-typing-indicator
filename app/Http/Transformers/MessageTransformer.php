@@ -19,6 +19,7 @@ class MessageTransformer extends Transformer
             'username' => $message->user->name,
             'timeAgo'  => Carbon::parse($message->created_at)->diffForHumans(),
             'userId'   => $message->user->id,
+            'status'   => 'sent',
         ];
     }
 }

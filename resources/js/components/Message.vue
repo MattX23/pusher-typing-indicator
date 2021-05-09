@@ -3,8 +3,9 @@
         class="message"
         :class="isOwnMessage ? 'message-own' : 'message-other'"
     >
-        <span>{{ message.body }}</span><span> - <i>{{ message.username }}</i></span>
+        <span>{{ message.body }}</span><span> - <i>{{ fromName }}</i></span>
         <div>{{ message.timeAgo }}</div>
+        <div>{{ message.status }}</div>
     </div>
 </template>
 
@@ -24,6 +25,9 @@ export default {
         isOwnMessage() {
             return this.user.id === this.message.userId;
         },
+        fromName() {
+            return this.isOwnMessage ? 'you' : this.message.username;
+        },
     },
     data() {
         return {
@@ -42,6 +46,7 @@ export default {
     padding: 10px;
     border-radius: 3px;
     max-width: 85%;
+    margin-top: .25rem;
 }
 .message-own {
     float: right;

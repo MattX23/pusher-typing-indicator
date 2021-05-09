@@ -8,16 +8,18 @@
                     </div>
                     <div class="main-container">
 
-                        <div class="card-body">
+                        <div class="card-body messages">
                             <div v-for="message in messages" :key="message.id">
-                                <message
-                                    :message="message"
-                                    :user="user"
-                                ></message>
+                                <div :class="message.userId === user.id ? 'message-container' : ''">
+                                    <message
+                                        :message="message"
+                                        :user="user"
+                                    ></message>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="card-body">
+                        <div class="card-body message-input-container">
                             <message-input
                                 :user="user"
                             ></message-input>
@@ -30,6 +32,8 @@
 </template>
 
 <script>
+import { EventBus } from "../eventbus/event-bus";
+
 export default {
     props: {
         user: {
@@ -37,21 +41,39 @@ export default {
             default: null,
         },
     },
+    created() {
+        EventBus.$on('message-update', message => {
+            this.messages.unshift(message);
+        });
+
+        EventBus.$on('message-status-update', (data) => {
+            this.updateMessageStatus(data);
+        });
+    },
+    mounted() {
+        this.fetchMessages();
+    },
     data() {
         return {
             messages: [],
         }
-    },
-    mounted() {
-        this.fetchMessages();
     },
     methods: {
         fetchMessages() {
             axios
                 .get(`/api/message/fetch-all`)
                 .then(response => {
-                    this.messages = response.data.data.messages;
+                    this.messages = response.data.data.messages.reverse();
                 });
+        },
+        updateMessageStatus(data) {
+            this.messages.forEach(function(tempMessage) {
+                if (tempMessage.id === data.tempMessageId) {
+                    tempMessage.status = data.status;
+                    tempMessage.id = data.message.id;
+                    tempMessage.timeAgo = data.message.timeAgo;
+                }
+            });
         },
     },
 }
@@ -63,5 +85,25 @@ export default {
 }
 .main-container {
     height: 85vh;
+}
+.message-container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    align-content: flex-end;
+}
+.message-input-container {
+    position: absolute;
+    bottom: 0;
+    width: 96%;
+    margin: 15px;
+    left: 0;
+    background: white;
+}
+.messages {
+    overflow: scroll;
+    height: 65vh;
+    display: flex;
+    flex-direction: column-reverse;
 }
 </style>
