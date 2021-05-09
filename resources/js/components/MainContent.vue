@@ -73,7 +73,10 @@ export default {
         },
         registerEchoNewMessageListener() {
             Echo.private('chat')
-                .listenForWhisper('new-message', () => this.fetchMessages());
+                .listenForWhisper('new-message', () => {
+                    this.fetchMessages();
+                    EventBus.$emit('hide-typing-indicator');
+            });
         },
         registerEventBusMessageListeners() {
             EventBus.$on('message-update', message => {

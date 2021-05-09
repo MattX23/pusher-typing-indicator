@@ -13,7 +13,7 @@
             v-show="typing"
             class="info-block"
         >
-            @{{ respondent }} is typing...
+            ... {{ respondent }} is typing
         </span>
         <button
             @click="submitMessage"
@@ -41,20 +41,24 @@ export default {
             },
             respondent: null,
             typing: false,
+            isTimeoutRunning: false,
         };
     },
     created() {
         this.registerEchoTypingListener();
+        this.registerEventBusTypingListener();
     },
     methods: {
-        isTyping() {
-            this.emitEchoTypingEvent();
+        isTyping(e) {
+            if (e.code !== 'Enter') {
+                this.emitEchoTypingEvent();
+            }
         },
         submitMessage() {
             // todo some validation
 
             const messageBody = this.message.input;
-            const tempMessageId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            const tempMessageId = this.randomString();
             this.message.input = '';
 
             this.passMessageToParent(messageBody, tempMessageId);
@@ -94,18 +98,27 @@ export default {
                 status: status,
                 tempMessageId: tempMessageId,
                 message: message
-            })
+            });
         },
         registerEchoTypingListener() {
-            Echo.private('chat')
-                .listenForWhisper('typing', (e) => {
-                    this.respondent = e.respondent;
-                    this.typing = e.typing;
+                Echo.private('chat')
+                    .listenForWhisper('typing', (e) => {
+                        this.respondent = e.respondent;
+                        this.typing = e.typing;
 
-                    setTimeout(() => {
-                        this.typing = false
-                    }, 1000);
-                });
+                        if (! this.isTimeoutRunning) {
+                            this.isTimeoutRunning = true;
+
+                            setTimeout(() => {
+                                this.hideTypingIndicator();
+                                this.isTimeoutRunning = false;
+                            }, 900);
+                        }
+
+                    });
+        },
+        registerEventBusTypingListener() {
+            EventBus.$on('hide-typing-indicator', () => this.hideTypingIndicator())
         },
         emitEchoTypingEvent() {
             let channel = Echo.private('chat');
@@ -120,6 +133,15 @@ export default {
         emitEchoNewMessageEvent() {
             Echo.private('chat').whisper('new-message', {});
         },
+        hideTypingIndicator() {
+            this.typing = false;
+        },
+        randomstring() {
+            // Generate a random string in JS
+            // https://gist.github.com/6174/6062387
+            return Math.random().toString(36).substring(2, 15) +
+                Math.random().toString(36).substring(2, 15);
+        }
     }
 }
 </script>
@@ -129,6 +151,6 @@ export default {
     font-style: italic;
     color: darkgrey;
     position: relative;
-    left: 0.5rem;
+    left: 0.25rem;
 }
 </style>

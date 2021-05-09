@@ -39,7 +39,7 @@ export default {
     background: lightgrey;
     padding: 10px;
     max-width: 85%;
-    margin-top: .25rem;
+    margin-top: .45rem;
     border-radius: 0 20px 20px 20px;
 }
 .message-own {
