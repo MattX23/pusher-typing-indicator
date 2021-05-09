@@ -7,8 +7,20 @@
                         Heading
                     </div>
                     <div class="main-container">
+
                         <div class="card-body">
-                            <message-input></message-input>
+                            <div v-for="message in messages" :key="message.id">
+                                <message
+                                    :message="message"
+                                    :user="user"
+                                ></message>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <message-input
+                                :user="user"
+                            ></message-input>
                         </div>
                     </div>
                 </div>
@@ -19,8 +31,28 @@
 
 <script>
 export default {
+    props: {
+        user: {
+            type: Object,
+            default: null,
+        },
+    },
+    data() {
+        return {
+            messages: [],
+        }
+    },
     mounted() {
-
+        this.fetchMessages();
+    },
+    methods: {
+        fetchMessages() {
+            axios
+                .get(`/api/message/fetch-all`)
+                .then(response => {
+                    this.messages = response.data.data.messages;
+                });
+        },
     },
 }
 </script>

@@ -11,7 +11,7 @@
             v-show="isTyping"
             class="info-block"
         >
-            @{{ user }} is typing...
+            @{{ respondent }} is typing...
         </span>
         <button
             @click="submitMessage"
@@ -24,16 +24,21 @@
 
 <script>
 export default {
-    mounted() {
-
+    props: {
+        user: {
+            type: Object,
+            default: null,
+        },
     },
+    // todo add messages to array of messages once created
     data() {
         return {
             message: {
                 input: '',
             },
             isTyping: false,
-            user: null,
+            respondent: null,
+            messages: [],
         };
     },
     methods: {
@@ -42,7 +47,8 @@ export default {
 
             axios
                 .post(`/api/message/send`, {
-                    message: this.message.input
+                    body: this.message.input,
+                    user_id: this.user.id,
                 })
                 .then(response => {
                     console.log(response.data);
