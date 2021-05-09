@@ -4,12 +4,14 @@
             <div class="col-md-8">
                 <div class="card">
                     <div class="card-header">
-                        Heading
+                        Chat...
                     </div>
                     <div class="main-container">
-
                         <div class="card-body messages">
-                            <div v-for="message in messages" :key="message.id">
+                            <div
+                                v-for="message in messages"
+                                :key="message.id"
+                            >
                                 <div :class="message.userId === user.id ? 'message-container' : ''">
                                     <message
                                         :message="message"
@@ -18,7 +20,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="card-body message-input-container">
                             <message-input
                                 :user="user"
@@ -42,13 +43,8 @@ export default {
         },
     },
     created() {
-        EventBus.$on('message-update', message => {
-            this.messages.unshift(message);
-        });
-
-        EventBus.$on('message-status-update', (data) => {
-            this.updateMessageStatus(data);
-        });
+        this.registerEchoNewMessageListener();
+        this.registerEventBusMessageListeners();
     },
     mounted() {
         this.fetchMessages();
@@ -75,6 +71,19 @@ export default {
                 }
             });
         },
+        registerEchoNewMessageListener() {
+            Echo.private('chat')
+                .listenForWhisper('new-message', () => this.fetchMessages());
+        },
+        registerEventBusMessageListeners() {
+            EventBus.$on('message-update', message => {
+                this.messages.unshift(message);
+            });
+
+            EventBus.$on('message-status-update', data => {
+                this.updateMessageStatus(data);
+            });
+        }
     },
 }
 </script>
@@ -102,7 +111,7 @@ export default {
 }
 .messages {
     overflow: scroll;
-    height: 65vh;
+    height: 66vh;
     display: flex;
     flex-direction: column-reverse;
 }

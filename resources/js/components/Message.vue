@@ -1,11 +1,13 @@
 <template>
     <div
         class="message"
-        :class="isOwnMessage ? 'message-own' : 'message-other'"
+        :class="isOwnMessage ? 'message-own' : ''"
     >
-        <span>{{ message.body }}</span><span> - <i>{{ fromName }}</i></span>
-        <div>{{ message.timeAgo }}</div>
-        <div>{{ message.status }}</div>
+        <span>{{ message.body }}</span><span> - <i>{{ getSignature }}</i></span>
+        <div class="row">
+            <div class="col-6"><small>{{ message.timeAgo }}</small></div>
+            <div v-if="isOwnMessage" class="col-6 text-right"><i>{{ message.status }}</i></div>
+        </div>
     </div>
 </template>
 
@@ -25,18 +27,10 @@ export default {
         isOwnMessage() {
             return this.user.id === this.message.userId;
         },
-        fromName() {
+        getSignature() {
             return this.isOwnMessage ? 'you' : this.message.username;
         },
     },
-    data() {
-        return {
-
-        };
-    },
-    methods: {
-
-    }
 }
 </script>
 
@@ -44,13 +38,15 @@ export default {
 .message {
     background: lightgrey;
     padding: 10px;
-    border-radius: 3px;
     max-width: 85%;
     margin-top: .25rem;
+    border-radius: 0 20px 20px 20px;
 }
 .message-own {
     float: right;
     width: 100%;
-    background: darkgrey;
+    background: #2b2d3c;
+    border-radius: 20px 0 20px 20px;
+    color: white;
 }
 </style>

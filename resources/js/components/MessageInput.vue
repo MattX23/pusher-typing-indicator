@@ -5,17 +5,19 @@
             class="form-control margin-top-md"
             placeholder="Send a message..."
             rows="3"
+            @keydown="isTyping"
+            @keyup.enter="submitMessage"
         >
         </textarea>
         <span
-            v-show="isTyping"
+            v-show="typing"
             class="info-block"
         >
             @{{ respondent }} is typing...
         </span>
         <button
             @click="submitMessage"
-            class="btn btn-primary float-right btn-submit margin-top-sm"
+            class="btn btn-dark float-right btn-submit margin-top-sm"
         >
             Send
         </button>
@@ -32,17 +34,22 @@ export default {
             default: null,
         },
     },
-    // todo add messages to array of messages once created
     data() {
         return {
             message: {
                 input: '',
             },
-            isTyping: false,
             respondent: null,
+            typing: false,
         };
     },
+    created() {
+        this.registerEchoTypingListener();
+    },
     methods: {
+        isTyping() {
+            this.emitEchoTypingEvent();
+        },
         submitMessage() {
             // todo some validation
 
@@ -53,18 +60,11 @@ export default {
             this.passMessageToParent(messageBody, tempMessageId);
             this.passMessageToStorage(messageBody)
                 .then(response => {
-                    EventBus.$emit('message-status-update', {
-                        status: 'sent',
-                        tempMessageId: tempMessageId,
-                        message: response.data.message
-                    })
+                    this.updateMessageStatus('sent', tempMessageId, response.data.message);
+                    this.emitEchoNewMessageEvent();
                 })
                 .catch(() => {
-                    EventBus.$emit('message-status-update', {
-                        status: 'failed',
-                        tempMessageId: tempMessageId,
-                        message: messageBody
-                    })
+                    this.updateMessageStatus('failed to send', tempMessageId, messageBody);
                 });
         },
         passMessageToParent(messageBody, tempMessageId) {
@@ -88,6 +88,37 @@ export default {
                 .then(response => {
                     return response.data;
                 });
+        },
+        updateMessageStatus(status, tempMessageId, message) {
+            EventBus.$emit('message-status-update', {
+                status: status,
+                tempMessageId: tempMessageId,
+                message: message
+            })
+        },
+        registerEchoTypingListener() {
+            Echo.private('chat')
+                .listenForWhisper('typing', (e) => {
+                    this.respondent = e.respondent;
+                    this.typing = e.typing;
+
+                    setTimeout(() => {
+                        this.typing = false
+                    }, 1000);
+                });
+        },
+        emitEchoTypingEvent() {
+            let channel = Echo.private('chat');
+
+            setTimeout(() => {
+                channel.whisper('typing', {
+                    respondent: this.user.name,
+                    typing: true
+                });
+            }, 300);
+        },
+        emitEchoNewMessageEvent() {
+            Echo.private('chat').whisper('new-message', {});
         },
     }
 }
